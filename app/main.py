@@ -14,7 +14,7 @@ dp = Dispatcher(bot)
 
 @dp.message_handler(commands=['start'])
 async def start_handler(message: Message):
-    await message.answer("👁 Добро пожаловать в ИнтимСканер!
+    await message.answer("👁 Добро пожаловать в ИнтимСканер!")
 
 Загрузи фото девушки, и я покажу тебе, что она скрывает...")
 
