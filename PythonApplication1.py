@@ -198,7 +198,7 @@ async def handle_photo(message: Message):
     img_bytes = requests.get(f"https://api.telegram.org/file/bot{API_TOKEN}/{file.file_path}").content
 
     # Проверяем, что на фото именно женское лицо
-    if not await is_female_face(img_bytes):
+    if not is_female_face(img_bytes):
         await message.answer("⚠️ Нужно чёткое фото девушки (одно лицо, без искажений). Попробуй другое.")
         return
 
@@ -425,58 +425,36 @@ async def handle_analysis(call: CallbackQuery):
 
 from aiogram import Router, F
 from aiogram.types import Message
+import cv2
+import numpy as np
 import tempfile
-import os
-from deepface import DeepFace
-from aiogram.types import BotCommand
 
-
-# ========================== БЛОК 10: Проверка женского лица с помощью DeepFace =============
-
-async def is_female_face(img_bytes) -> bool:
-    import tempfile
-    import os
-    from deepface import DeepFace
-
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
+# Предсказание пола: возвращает True, если определено как женщина
+def is_female_face(img_bytes) -> bool:
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
         tmp.write(img_bytes)
-        tmp_path = tmp.name
+        img_path = tmp.name
 
     try:
-        result = DeepFace.analyze(
-            img_path=tmp_path,
-            actions=["gender"],
-            enforce_detection=False
-        )
-        gender = result[0]["dominant_gender"].lower()
-        print(f"[DEBUG] DeepFace определил: {gender}")
-        return gender == "woman"
+        model = cv2.dnn.readNetFromCaffe("models/deploy_gender.prototxt", "models/gender_net.caffemodel")
+        genders = ['Male', 'Female']
+
+        image = cv2.imread(img_path)
+        if image is None:
+            return False
+
+        blob = cv2.dnn.blobFromImage(image, 1.0, (227, 227), (78.4, 87.7, 114.9), swapRB=False)
+        model.setInput(blob)
+        gender_preds = model.forward()
+        gender = genders[gender_preds[0].argmax()]
+        print(f"[OpenCV] Определено как: {gender}")
+        return gender == "Female"
+
     except Exception as e:
-        print("❌ Ошибка DeepFace:", e)
+        print("OpenCV ошибка:", e)
         return False
     finally:
-        os.remove(tmp_path)
-
-
-
-    cid = message.chat.id
-    photo = message.photo[-1]
-    fid = photo.file_id
-
-    # Запоминаем фото, чтобы не обрабатывать одно и то же
-    user_data[cid] = {'photo_id': fid}
-
-    photo_file = await message.bot.get_file(fid)
-    file_path = photo_file.file_path
-    img_bytes = await message.bot.download_file(file_path)
-    img_bytes = img_bytes.read()
-
-    if not await is_female_face(img_bytes):
-        await message.answer("❌ Я работаю только с женскими фото. Попробуй другое изображение.")
-        return
-
-    await message.answer("✅ Девушка определена. Запускаю анализ...")
-    # Далее твоя логика анализа
+        os.remove(img_path)
 
 
 
