@@ -522,25 +522,33 @@ async def any_text(message: Message):
 from aiohttp import web
 import threading
 
+# ========================== БЛОК 13: Основной запуск бота ===================================
+
+from aiohttp import web
+
 async def handle(request):
     return web.Response(text="Bot is running")
 
-app = web.Application()
-app.router.add_get("/", handle)
-
-def run_fake_server():
-    web.run_app(app, port=10000)
-
-threading.Thread(target=run_fake_server).start()
-
 async def main():
     print("🚀 Бот запускается...")
+
+    # Задаём сервер для Render — открываем порт
+    app = web.Application()
+    app.router.add_get("/", handle)
+
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, port=10000)
+    await site.start()
+
+    # Запускаем Telegram-бота
     await bot.delete_webhook(drop_pending_updates=True)
     await bot.delete_my_commands()
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
 
     from aiohttp import web
