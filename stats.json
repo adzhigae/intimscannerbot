@@ -1,0 +1,37 @@
+{
+  "5236431337": {
+    "first_seen": "2025-05-02 03:18",
+    "last_active": "2025-05-04 21:23",
+    "photos_sent": 65,
+    "session_time_sec": 242497,
+    "clicked_payment": true
+  },
+  "1127426733": {
+    "first_seen": "2025-05-02 04:04",
+    "last_active": "2025-05-03 03:37",
+    "photos_sent": 5,
+    "session_time_sec": 85192,
+    "clicked_payment": false
+  },
+  "733946306": {
+    "first_seen": "2025-05-02 06:54",
+    "last_active": "2025-05-02 06:56",
+    "photos_sent": 1,
+    "session_time_sec": 173,
+    "clicked_payment": false
+  },
+  "650463067": {
+    "first_seen": "2025-05-02 17:57",
+    "last_active": "2025-05-02 18:08",
+    "photos_sent": 1,
+    "session_time_sec": 700,
+    "clicked_payment": false
+  },
+  "399835903": {
+    "first_seen": "2025-05-03 01:52",
+    "last_active": "2025-05-03 02:01",
+    "photos_sent": 1,
+    "session_time_sec": 541,
+    "clicked_payment": false
+  }
+}
