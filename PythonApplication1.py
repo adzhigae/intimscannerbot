@@ -5,6 +5,17 @@ import json
 import random
 import threading
 
+AGREED_USERS_FILE = "agreed_users.json"
+
+def load_agreed_users():
+    if not os.path.exists(AGREED_USERS_FILE):
+        return set()
+    with open(AGREED_USERS_FILE, "r") as f:
+        return set(json.load(f))
+
+def save_agreed_users(users):
+    with open(AGREED_USERS_FILE, "w") as f:
+        json.dump(list(users), f)
 
 
 from dotenv import load_dotenv
@@ -106,6 +117,7 @@ DISCLAIMER = """👨‍⚖️ <b>О проекте и отказ от ответ
 
 # Словарь для хранения промежуточных данных по пользователям
 user_data = {}
+agreed_users = load_agreed_users()
 
 # ========================== БЛОК 2: Переменные, шаблоны и кнопки ==========================
 
@@ -126,7 +138,7 @@ async def cmd_start(message: Message):
         user_data[cid] = {}
 
     # Показываем соглашение, если ещё не принято
-    if not user_data[cid].get("agreement_accepted"):
+    if cid not in agreed_users:
         agreement_text = (
             f"Для начала работы с ботом, необходимо ознакомиться с "
             f"<a href='{AGREEMENT_LINK}'>пользовательским соглашением</a>\n\n"
@@ -182,7 +194,7 @@ async def handle_photo(message: Message):
     cid = message.chat.id  # ID чата
     fid = message.photo[-1].file_id  # ID файла фото
 
-    if not user_data.get(cid, {}).get("agreement_accepted"):
+    if cid not in agreed_users:
         await message.answer("⚠️ Чтобы продолжить, нажмите кнопку «✅ Я согласен» в пользовательском соглашении выше.")
         return
 
@@ -307,13 +319,12 @@ async def handle_show_payment(call: CallbackQuery):
 @dp.callback_query(F.data == "agree_terms")
 async def handle_agree_terms(call: CallbackQuery):
     cid = call.message.chat.id
-    user_data[cid] = user_data.get(cid, {})
-    user_data[cid]["agreement_accepted"] = True
+    agreed_users.add(cid)
+    save_agreed_users(agreed_users)
 
     await call.message.delete()
     await call.message.answer(PROMO_TEXT)
 
-    # запускаем напоминалку
     async def reminder():
         await asyncio.sleep(90)
         if 'photo_id' not in user_data.get(cid, {}):
@@ -325,10 +336,23 @@ async def handle_agree_terms(call: CallbackQuery):
     asyncio.create_task(reminder())
 
 
-@dp.callback_query(F.data.in_(["lust", "money", "power"]))
+dp.callback_query(F.data.in_(["lust", "money", "power"]))
 async def handle_analysis(call: CallbackQuery):
     cid, trait = call.message.chat.id, call.data
 
+    # 🔒 Защита от KeyError — создаём ключи, если их нет
+    if cid not in user_data:
+        user_data[cid] = {}
+
+    if 'analyzed' not in user_data[cid]:
+        user_data[cid]['analyzed'] = {}
+
+    if 'results' not in user_data[cid]:
+        user_data[cid]['results'] = {}
+
+    if 'is_processing' not in user_data[cid]:
+        user_data[cid]['is_processing'] = False
+            
     analysis_steps = {
         "lust": [
             "🧠 Анализирую поведение по 11 286 кейсам...",
