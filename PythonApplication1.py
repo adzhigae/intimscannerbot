@@ -1,8 +1,9 @@
-﻿import asyncio
+import asyncio
 import os
 import requests
 import json
 import random
+import threading
 
 
 
@@ -15,6 +16,8 @@ from aiogram.filters import Command
 from aiogram.client.default import DefaultBotProperties
 from aiogram.types import URLInputFile
 from aiogram.types import BotCommand
+from aiohttp import web
+
 
 AGREEMENT_LINK = "https://telegra.ph/Polzovatelskoe-soglashenie-IntimScannerBot-05-03"
 
@@ -516,15 +519,29 @@ async def any_text(message: Message):
 
 # ========================== БЛОК 13: Основной запуск бота ===================================
 
+from aiohttp import web
+import threading
+
+async def handle(request):
+    return web.Response(text="Bot is running")
+
+app = web.Application()
+app.router.add_get("/", handle)
+
+def run_fake_server():
+    web.run_app(app, port=10000)
+
+threading.Thread(target=run_fake_server).start()
+
 async def main():
     print("🚀 Бот запускается...")
     await bot.delete_webhook(drop_pending_updates=True)
     await bot.delete_my_commands()
     await dp.start_polling(bot)
 
-# Точка входа в приложение
 if __name__ == "__main__":
     asyncio.run(main())
+
 
     from aiohttp import web
 
@@ -545,7 +562,7 @@ async def on_payment_success(request):
                 "3. Используй моменты, когда она сбита с толку — это шанс проявиться.\n"
                 "4. Остальное расскажем позже 😉")
 
-            # Отправка дополнительного гайда
+            # Отправка дополнительного гайда413879413879
             await bot.send_message(cid, "📘 <b>Гайд по шагам:</b>\n\n"
                 "1️⃣ Сначала зацепи внимание — фразой или взглядом.\n"
                 "2️⃣ Улови её реакцию: если приостановилась — это вход.\n"
